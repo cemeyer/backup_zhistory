@@ -15,7 +15,11 @@ zstdcat "$ZHBD/$LASTBKUP" | cmp -s "$HOME/.zhistory" -
 if [ $? -ne 0 ]; then
     # 3. New backup
 
-    zstd --quiet --check --threads=0 --ultra -22 --keep \
-	-o "$ZHBD/zhistory-$(date +"%Y-%m-%d_%H:%M:%S").zst" \
+    OFILE="$ZHBD/zhistory-$(date +"%Y-%m-%d_%H:%M:%S").zst"
+    zstd --quiet --check --threads=0 --ultra -22 --keep -o "$OFILE" \
 	< "$HOME/.zhistory"
+
+    fsync "$OFILE"
+    fsync "$ZHBD"
+    fsync "$HOME"
 fi
