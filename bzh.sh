@@ -16,7 +16,7 @@ if [ $? -ne 0 ]; then
     # 3. New backup
 
     OFILE="$ZHBD/zhistory-$(date +"%Y-%m-%d_%H:%M:%S").zst"
-    zstd --quiet --check --threads=0 --ultra -22 --keep -o "$OFILE" \
+    zstd --quiet --check --threads=0 -12 --keep -o "$OFILE" \
 	< "$HOME/.zhistory"
 
     fsync "$OFILE"
