@@ -4,22 +4,22 @@
 # * * * * * $HOME/src/backup_zhistory/bzh.sh
 
 ZHBD="$HOME/.zhistory-backups"
+DIGESTFILE="/tmp/$USER/backup_zhistory.sha512"
 
 mkdir -p "$ZHBD"
 
-# 1. Locate latest backup
-LASTBKUP="$(ls -tr $ZHBD/ | tail -n1)"
+# 1. Compare last hash against current history file
+( sha512 < "$HOME/.zhistory" ) | \
+if ! cmp -s "$DIGESTFILE" - ; then
 
-# 2. Compare against current history file
-zstdcat "$ZHBD/$LASTBKUP" | cmp -s "$HOME/.zhistory" - 
-if [ $? -ne 0 ]; then
     # 3. New backup
+    OFILE="$ZHBD/zhistory-$(date +"%Y-%m-%d_%H:%M:%S")"
 
-    OFILE="$ZHBD/zhistory-$(date +"%Y-%m-%d_%H:%M:%S").zst"
-    zstd --quiet --check --threads=0 -12 --keep -o "$OFILE" \
-	< "$HOME/.zhistory"
+    cp -a "$HOME/.zhistory" "$OFILE"
+    sha512 < "$OFILE" > "${DIGESTFILE}"
+    zstd --quiet --check --threads=0 -12 --rm "$OFILE"
 
-    fsync "$OFILE"
+    fsync "${OFILE}.zst"
     fsync "$ZHBD"
-    fsync "$HOME"
+    #fsync "$HOME"
 fi
